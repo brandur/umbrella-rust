@@ -5,6 +5,7 @@ extern mod http;
 
 use std::io::net::ip::{SocketAddr, Ipv4Addr, Port};
 use std::io::Writer;
+use std::os;
 
 use http::client::RequestWriter;
 use http::server::{Config, Server, Request, ResponseWriter};
@@ -20,7 +21,7 @@ impl Server for UmbrellaServer {
     fn get_config(&self) -> Config {
         Config { bind_address: SocketAddr {
             ip: Ipv4Addr(127, 0, 0, 1),
-            port: 8001
+            port: self.port
         } }
     }
 
@@ -50,13 +51,21 @@ impl Server for UmbrellaServer {
 }
 
 fn main() {
-    serve();
+    let args = os::args();
+    match args.len() {
+        0 => unreachable!(),
+        3 => serve(args[1].clone(), args[2].clone()),
+        _ => {
+            println!("Usage: {} PORT UPSTREAM_URL", args[0]);
+            return;
+        },
+    };
 }
 
-fn serve() {
+fn serve(port: ~str, upstream_url: ~str) {
     let server = UmbrellaServer {
-        port: 8081,
-        upstream_url: ~"http://localhost:5000/"
+        port: from_str(port).unwrap(),
+        upstream_url: upstream_url
     };
     server.serve_forever();
 }
