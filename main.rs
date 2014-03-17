@@ -4,7 +4,6 @@ extern mod extra;
 extern mod http;
 
 use std::io::net::ip::{SocketAddr, Ipv4Addr, Port};
-use std::io::net::tcp::{TcpStream};
 use std::io::Writer;
 use std::os;
 
@@ -19,7 +18,8 @@ struct UmbrellaServer {
 }
 
 impl UmbrellaServer {
-    fn write_extension(&self, response: &ResponseReader<TcpStream>, w: &mut ResponseWriter, header: ~str) {
+    fn write_extension<S>(&self, response: &ResponseReader<S>,
+        w: &mut ResponseWriter, header: ~str) {
         match response.headers.extensions.find(&header) {
             Some(val) => { w.headers.extensions.swap(header, (*val).clone()); },
             None      => {}
