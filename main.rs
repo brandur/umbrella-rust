@@ -4,10 +4,11 @@ extern mod extra;
 extern mod http;
 
 use std::io::net::ip::{SocketAddr, Ipv4Addr, Port};
+use std::io::net::tcp::{TcpStream};
 use std::io::Writer;
 use std::os;
 
-use http::client::RequestWriter;
+use http::client::{RequestWriter, ResponseReader};
 use http::server::{Config, Server, Request, ResponseWriter};
 use http::server::request::{AbsolutePath, AbsoluteUri};
 
@@ -15,6 +16,15 @@ use http::server::request::{AbsolutePath, AbsoluteUri};
 struct UmbrellaServer {
     port: Port,
     upstream_url: ~str,
+}
+
+impl UmbrellaServer {
+    fn write_extension(&self, response: &ResponseReader<TcpStream>, w: &mut ResponseWriter, header: ~str) {
+        match response.headers.extensions.find(&header) {
+            Some(val) => { w.headers.extensions.swap(header, (*val).clone()); },
+            None      => {}
+        };
+    }
 }
 
 impl Server for UmbrellaServer {
@@ -46,6 +56,9 @@ impl Server for UmbrellaServer {
                 return;
             }
         };
+
+        self.write_extension(&response, w, ~"Next-Range");
+        self.write_extension(&response, w, ~"Prev-Range");
 
         w.status = http::status::Status::from_code_and_reason(
             response.status.code(),
