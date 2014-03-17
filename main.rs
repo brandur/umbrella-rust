@@ -32,7 +32,12 @@ impl Server for UmbrellaServer {
             _ => { ~"" }
         };
         let url: Option<extra::url::Url> = from_str(self.upstream_url + path);
-        let request = RequestWriter::new(r.method.clone(), url.unwrap());
+        let mut request = RequestWriter::new(r.method.clone(), url.unwrap());
+
+        request.headers.accept        = r.headers.accept.clone();
+        request.headers.authorization = r.headers.authorization.clone();
+        request.headers.range         = r.headers.range.clone();
+        request.headers.user_agent    = r.headers.user_agent.clone();
 
         let mut response = match request.read_response() {
             Ok(response) => response,
